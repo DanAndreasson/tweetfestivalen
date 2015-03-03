@@ -1,0 +1,22 @@
+[
+  {
+    "message": "Jag tycker att Pepcha var fantastisk #awesome #grym",
+    "positive": true,
+    "artist": "pepcha"
+  },
+  {
+    "message": "Jag tycker att Pepcha var sissådär #osäker",
+    "positive": false,
+    "artist": "pepcha"
+  },
+  {
+    "message": "raimond, vad håller han på med?! GRYM #raimondvinner",
+    "positive": true,
+    "artist": "raimond"
+  },
+  {
+    "message": "Pupcha, vad fan håller han på med?! skitkass #pepchakanintesjunga",
+    "positive": false,
+    "artist": "pepcha"
+  }
+]

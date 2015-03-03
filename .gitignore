@@ -65,3 +65,4 @@ target/
 Session.vim
 .netrwhist
 *~
+saved_data.json

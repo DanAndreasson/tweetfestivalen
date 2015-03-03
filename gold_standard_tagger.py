@@ -20,6 +20,7 @@ class GoldStandardTagger:
     save_gold_tweets = [] 
     for tweet in tweets:
       self.clear_screen()
+      print("Current Goldcount: " + str(len(save_gold_tweets)))
       tweet = self.print_screen(tweet) 
       if tweet == "QUIT":
         break

@@ -64,6 +64,3 @@ class TweetFetcher:
         
 
     
-fetcher = TweetFetcher()
-fetcher.search()
-fetcher.save(fetcher.tweet_list,'closing')

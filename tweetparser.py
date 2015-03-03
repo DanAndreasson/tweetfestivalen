@@ -37,6 +37,4 @@ class TweetParser:
 
 
 
-tp = TweetParser()
-tp.delete_duplicates(tp.get_files_from_folder('./data'))
     

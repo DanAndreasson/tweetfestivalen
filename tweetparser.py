@@ -40,8 +40,8 @@ class TweetParser:
     print("Tweetcount: " + str(len(tweets)))
     print("File saved: " + savefile)
 
-  def save_relevant_file(self,tweets):
-    savefile = './parsed/relevant_tweets.json'
+  def save_relevant_file(self,tweets,date):
+    savefile = './parsed/relevant_tweets - '+ date.isoformat() +'.json'
     with open(savefile,'w') as w_file:
       w_file.write('{}\n'.format(json.dumps(tweets)))
     print("Tweetcount: " + str(len(tweets)))
@@ -73,12 +73,12 @@ class TweetParser:
             found_tweets += 1
             all_tweets.append(tweet)
 
-    self.save_relevant_file(all_tweets)
+    self.save_relevant_file(all_tweets,date)
 
   def get_files_from_folder(self,folder):
     return [ folder + '/' + f for f in listdir(folder) if isfile(join(folder,f)) ]
 
-
-
-
+#tp = TweetParser()
+#from_date = datetime.datetime(2015,3,1)
+#tp.find_relevant_tweets('./parsed/parsed_tweets.json',date=from_date)
 

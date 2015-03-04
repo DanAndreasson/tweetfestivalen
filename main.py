@@ -25,19 +25,21 @@ WORDS = []
 chance_of_winning = {}
 
 class NaiveBayesClassifier():
+    pp = {}
     pc = {}
     pw = {}
     nr_of_tweets = 0
 
     def save(self, filename):
         with open(filename, 'w') as outfile:
-            json.dump({"pw": self.pw, "pc": self.pc}, outfile)
+            json.dump({"pw": self.pw, "pc": self.pc, "pp": self.pp}, outfile)
 
     def load(self, filename):
         with open(filename) as fp:
             data = json.load(fp)
             self.pw = data["pw"]
             self.pc = data["pc"]
+            self.pp = data["pp"]
 
     def get_tokens(self, tweet):
         """Returns the token list for the specified tweet."""
@@ -52,12 +54,31 @@ class NaiveBayesClassifier():
         if k not in d.keys():
             d[k] = v
 
+    def predict_positive(self, tweet):
+
+        tokens = self.get_tokens(tweet)
+        positive = self.pc["positive"]
+        negative = self.pc["negative"]
+        
+        for word in tokens:
+            if word in self.pp["positive"]:
+                positive += self.pp["positive"][word]
+
+            if word in self.pp["negative"]:
+                negative += self.pp["negative"][word]
+
+        p = positive > negative
+        print(p)
+        return positive > negative
+    
+        
     def predict(self, tweet):
         """Predicts the artist of the specified tweet."""
         self.nr_of_tweets += 1
         probable_artists = {}
         for k in self.pw:
-            probable_artists[k] = 0
+            #probable_artists[k] = 0
+            probable_artists[k] = self.pc[k]
 
         for token in self.get_tokens(tweet):
             WORDS.append(token)
@@ -68,7 +89,7 @@ class NaiveBayesClassifier():
                     if probable_artists[artist] == 0:
                         probable_artists[artist] = (self.pw[artist][token])
                     else:
-                        probable_artists[artist] *= (self.pw[artist][token])
+                        probable_artists[artist] += (self.pw[artist][token])
             if not word_existed:
                 UNKNOWN_WORDS.append(token)
 
@@ -80,24 +101,70 @@ class NaiveBayesClassifier():
                 winner = probable_artist
             elif p > probable_artists[winner]:
                 winner = probable_artist
-
+        
         chance_of_winning[winner] += 1
+        return winner
+        
 
 
+    def train_opinion(self, tweets):
+        """Trains the parser on positive and negative tweets using specified training data"""
+        smoothing_set = set()
+        positive_words = negative_words = {}
+        word_count = {}
+
+        self.ensure_key(self.pc,"negative",0)
+        self.ensure_key(self.pc,"positive",0)
+        
+        for tweet in tweets:
+            tokens = self.get_tokens(tweet)
+            if tweet["positive"]:
+                self.pc["positive"] += 1
+                for w in tokens:
+                    smoothing_set.add(w)
+                    self.ensure_key(positive_words,w,0)
+                    self.ensure_key(word_count,w,0)
+                    positive_words[w] += 1
+                    word_count[w] += 1
+            else:
+                self.pc["negative"] += 1
+                for w in tokens:
+                    smoothing_set.add(w)
+                    self.ensure_key(negative_words,w,0)
+                    self.ensure_key(word_count,w,0)
+                    negative_words[w] += 1
+                    word_count[w] += 1
+        
+        self.pc["positive"] = math.log( self.pc["positive"] / len(tweets) )
+        self.pc["negative"] = math.log( self.pc["negative"] / len(tweets) )
+        self.pp["positive"] = positive_words
+        self.pp["negative"] = negative_words
 
 
+        for word in smoothing_set:
+            for key in self.pp:
+                self.ensure_key(self.pp[key],word,0)
+                self.pp[key][word] += 1
+
+        #TODO: word_count[w] and positive_words[w] or negative_words[w]
+        #      calculates same things??? or too little data?
+        for key, words in self.pp.items():
+            for word, c in words.items():
+                self.pp[key][word] = math.log( c / word_count[word] )
+                
+        
     def train(self, tweets):
         """Trains using the specified training data."""
         word_count = {}
         positive_tweets = negative_tweets = 0
         for tweet in tweets:
             tokens = self.get_tokens(tweet)
-        #    artist = artists[int(tweet["artist"])-1]
-            if tweet["positive"]:
-                artist = artists[int(tweet["artist"])-1]
-            else:
-                artist = "negative"
-                negative_tweets += 1
+            artist = artists[int(tweet["artist"])-1]
+            # if tweet["positive"]:
+            #     artist = artists[int(tweet["artist"])-1]
+            # else:
+            #     artist = "negative"
+            #     negative_tweets += 1
             self.ensure_key(self.pc, artist, 0)
             self.pc[artist] += 1
             self.ensure_key(self.pw, artist, {})
@@ -106,14 +173,15 @@ class NaiveBayesClassifier():
                 self.pw[artist][w] += 1
                 self.ensure_key(word_count, w, 0)
                 word_count[w] += 1
-        print(str(negative_tweets) + " negativa tweets")
+        # print(str(negative_tweets) + " negativa tweets")
         print("Tränade på " + str(len(tweets)))
 
-
-
+        for artist in self.pw:
+            self.pc[artist] = math.log(self.pc[artist] / len(tweets))
+        
         for artist, words in self.pw.items():
             for word, c in words.items():
-                self.pw[artist][word] = c / word_count[word]
+                self.pw[artist][word] = math.log(c / word_count[word])
 
 
 
@@ -134,6 +202,8 @@ if __name__ == "__main__":
             with open("./gold/" + fn) as fp:
                 training_data += json.load(fp)
         LOG("Training ...")
+        #remove comment to train opinion
+        #classifier.train_opinion(training_data)
         classifier.train(training_data)
         LOG(" done\n")
         LOG("Saving model to %s ..." % sys.argv[3])
@@ -154,7 +224,10 @@ if __name__ == "__main__":
         for k in classifier.pw:
             chance_of_winning[k] = 0
         for tweet in test_data:
+            #remove comment to remove negative tweets
+            #if classifier.predict_positive(tweet):
             classifier.predict(tweet)
+                
         for artist, points in classifier.placements().items():
             print( "{0:.1f}% {1}".format(abs(points/classifier.nr_of_tweets)*100, artist))
         print("\n" +str(classifier.nr_of_tweets) + " tweets was predicted")

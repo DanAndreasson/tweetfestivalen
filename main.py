@@ -79,9 +79,13 @@ class NaiveBayesClassifier():
     def train(self, tweets):
         """Trains using the specified training data."""
         word_count = {}
+        positive_tweets = negative_tweets = 0
         for tweet in tweets:
             tokens = self.get_tokens(tweet)
-            artist = tweet["artist"]
+            if tweet["positive"]:
+                artist = artists[int(tweet["artist"])-1]
+            else:
+                artist = "negative"
             self.ensure_key(self.pc, artist, 0)
             self.pc[artist] += 1
             self.ensure_key(self.pw, artist, {})
@@ -90,6 +94,8 @@ class NaiveBayesClassifier():
                 self.pw[artist][w] += 1
                 self.ensure_key(word_count, w, 0)
                 word_count[w] += 1
+
+
 
         for artist, words in self.pw.items():
             for word, c in words.items():
@@ -101,16 +107,6 @@ if __name__ == "__main__":
     import json
     import sys
 
-#    with open(sys.argv[1]) as fp:
-#
-#
-#        print("Laddar tweets från %s ..." % sys.argv[1])
-#        data = json.load(fp)
-#    classifier = NaiveBayesClassifier()
-#    classifier.train(data)
-#    test_data = {"message": "raimond plockar detta lätt GRYM SOM FAN"}
-#    classifier.predict(test_data)
-#
 
     def LOG(msg):
         sys.stdout.write(msg)
@@ -143,7 +139,7 @@ if __name__ == "__main__":
         for tweet in test_data:
             classifier.predict(tweet)
         for artist, points in classifier.placements().items():
-            print( "{0:.3f} {1}".format(abs(points), artists[int(artist)-1]))
+            print( "{0:.3f} {1}".format(abs(points), artist))
         print("\n" +str(classifier.nr_of_tweets) + " tweets was predicted")
         print(str(len(set(UNKNOWN_WORDS))) + " ord skippades")
         #for word in set(UNKNOWN_WORDS):

@@ -83,10 +83,6 @@ class NaiveBayesClassifier():
 
         chance_of_winning[winner] += 1
 
-        if winner == "negative":
-            print(tweet)
-            print(probable_artists)
-            print()
 
 
 
@@ -111,6 +107,7 @@ class NaiveBayesClassifier():
                 self.ensure_key(word_count, w, 0)
                 word_count[w] += 1
         print(str(negative_tweets) + " negativa tweets")
+        print("Tränade på " + str(len(tweets)))
 
 
 
@@ -123,6 +120,7 @@ class NaiveBayesClassifier():
 if __name__ == "__main__":
     import json
     import sys
+    import os
 
 
     def LOG(msg):
@@ -131,10 +129,10 @@ if __name__ == "__main__":
 
     if sys.argv[1] == "train":
         classifier = NaiveBayesClassifier()
-        with open(sys.argv[2]) as fp:
-            LOG("Loading training data from %s ..." % sys.argv[2])
-            training_data = json.load(fp)
-            LOG(" done\n")
+        training_data = []
+        for fn in os.listdir("./gold"):
+            with open("./gold/" + fn) as fp:
+                training_data += json.load(fp)
         LOG("Training ...")
         classifier.train(training_data)
         LOG(" done\n")

@@ -79,9 +79,13 @@ class NaiveBayesClassifier():
     def train(self, tweets):
         """Trains using the specified training data."""
         word_count = {}
+        positive_tweets = negative_tweets = 0
         for tweet in tweets:
             tokens = self.get_tokens(tweet)
-            artist = artists[int(tweet["artist"])-1]
+            if tweet["positive"]:
+                artist = artists[int(tweet["artist"])-1]
+            else:
+                artist = "negative"
             self.ensure_key(self.pc, artist, 0)
             self.pc[artist] += 1
             self.ensure_key(self.pw, artist, {})
@@ -90,6 +94,8 @@ class NaiveBayesClassifier():
                 self.pw[artist][w] += 1
                 self.ensure_key(word_count, w, 0)
                 word_count[w] += 1
+
+
 
         for artist, words in self.pw.items():
             for word, c in words.items():

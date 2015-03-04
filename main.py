@@ -81,7 +81,7 @@ class NaiveBayesClassifier():
         word_count = {}
         for tweet in tweets:
             tokens = self.get_tokens(tweet)
-            artist = tweet["artist"]
+            artist = artists[int(tweet["artist"])-1]
             self.ensure_key(self.pc, artist, 0)
             self.pc[artist] += 1
             self.ensure_key(self.pw, artist, {})
@@ -143,7 +143,7 @@ if __name__ == "__main__":
         for tweet in test_data:
             classifier.predict(tweet)
         for artist, points in classifier.placements().items():
-            print( "{0:.3f} {1}".format(abs(points), artists[int(artist)-1]))
+            print( "{0:.3f} {1}".format(abs(points), artist))
         print("\n" +str(classifier.nr_of_tweets) + " tweets was predicted")
         print(str(len(set(UNKNOWN_WORDS))) + " ord skippades")
         #for word in set(UNKNOWN_WORDS):

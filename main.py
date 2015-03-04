@@ -7,7 +7,7 @@ import math
 from collections import OrderedDict
 
 STOP_WORDS = "vara vad kan sina här ha mot vid kunde något från ut när efter upp vi där min skulle då sin nu har mig du så till är men ett om hade på den med var sig en och det att var att jag i och eller som man melodifestivalen mello melfest".split()
-BAD_CHARS = r"[,.?!-/;:']"
+BAD_CHARS = r"[,.?!-/;:']|(@.+ )"
 
 artists = [
         'Andreas Weise – ”Bring Out the Fire”',
@@ -161,7 +161,6 @@ if __name__ == "__main__":
         print(str(len(set(UNKNOWN_WORDS))) + " ord skippades")
         print(str(len(set(WORDS))) + " ord totalt")
         print(str((len(set(UNKNOWN_WORDS))/len(set(WORDS)))*100) + "% skippades" )
-
         #pprint.pprint(classifier.pw)
         #for word in set(UNKNOWN_WORDS):
         #    print(word, end=" ")

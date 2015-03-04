@@ -83,6 +83,11 @@ class NaiveBayesClassifier():
 
         chance_of_winning[winner] += 1
 
+        if winner == "negative":
+            print(tweet)
+            print(probable_artists)
+            print()
+
 
 
     def train(self, tweets):
@@ -96,6 +101,7 @@ class NaiveBayesClassifier():
                 artist = artists[int(tweet["artist"])-1]
             else:
                 artist = "negative"
+                negative_tweets += 1
             self.ensure_key(self.pc, artist, 0)
             self.pc[artist] += 1
             self.ensure_key(self.pw, artist, {})
@@ -104,6 +110,7 @@ class NaiveBayesClassifier():
                 self.pw[artist][w] += 1
                 self.ensure_key(word_count, w, 0)
                 word_count[w] += 1
+        print(str(negative_tweets) + " negativa tweets")
 
 
 
@@ -158,5 +165,5 @@ if __name__ == "__main__":
         print(str((len(set(UNKNOWN_WORDS))/len(set(WORDS)))*100) + "% skippades" )
 
         #pprint.pprint(classifier.pw)
-        for word in set(UNKNOWN_WORDS):
-            print(word, end=" ")
+        #for word in set(UNKNOWN_WORDS):
+        #    print(word, end=" ")

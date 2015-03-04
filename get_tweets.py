@@ -1,10 +1,14 @@
-import TweetParser
-import TweetFetcher
-
+from tweetparser import TweetParser
+from tweetfetcher import TweetFetcher
+import datetime
 tf = TweetFetcher()
 tp = TweetParser()
 
-tf.search()
+date = datetime.datetime(2015,3,1)
+
+
+tf.search(until=date)
+
 tf.save(tf.tweet_list,'closing')
 
 tp.delete_duplicates(tp.get_files_from_folder('./data'))

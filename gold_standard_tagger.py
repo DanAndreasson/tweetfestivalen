@@ -20,9 +20,17 @@ class GoldStandardTagger:
 
   def start(self,filename):
     
+    start_from = "Lyssnat på låtarna i #melfest. Den jag gillar bäst av alla just nu är Dinah Nah, det innebär plats 5 imorrn as usual! #sverigekaninterösta"
+    found = False
     tweets = self.load_from_file(filename)
-    save_gold_tweets = [] 
+    save_gold_tweets = []
     for tweet in tweets:
+      if start_from != None and found == False:
+        if tweet["message"] != start_from:
+          continue 
+        else:
+          start_from = None
+          found == True
       self.clear_screen()
       print("GoldCount: " + str(len(save_gold_tweets)))
       tweet = self.print_screen(tweet) 
@@ -33,7 +41,7 @@ class GoldStandardTagger:
     self.save_file(save_gold_tweets) 
 
   def save_file(self,tweets):
-    savefile = './gold/gold_tweets.json'
+    savefile = './gold/gold_tweets_2.json'
     with open(savefile,'w') as w_file:
       w_file.write('{}\n'.format(json.dumps(tweets)))
     print("Tweetcount: " + str(len(tweets)))

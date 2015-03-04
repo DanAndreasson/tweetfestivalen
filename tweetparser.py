@@ -34,7 +34,7 @@ class TweetParser:
     self.save_parsed_file(all_tweets)
 
   def save_parsed_file(self,tweets):
-    savefile = './parsed/parsed_tweets.json'
+    savefile = './parsed/parsed_tweets_2.json'
     with open(savefile,'w') as w_file:
       w_file.write('{}\n'.format(json.dumps(tweets)))
     print("Tweetcount: " + str(len(tweets)))

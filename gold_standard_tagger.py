@@ -67,7 +67,7 @@ class GoldStandardTagger:
       return "QUIT"
     if positive == "3":
       return None
-    positive = True if positive == 1 else False
+    positive = True if positive == "1" else False
     tweet["positive"] = positive
     return tweet
     

@@ -101,16 +101,6 @@ if __name__ == "__main__":
     import json
     import sys
 
-#    with open(sys.argv[1]) as fp:
-#
-#
-#        print("Laddar tweets från %s ..." % sys.argv[1])
-#        data = json.load(fp)
-#    classifier = NaiveBayesClassifier()
-#    classifier.train(data)
-#    test_data = {"message": "raimond plockar detta lätt GRYM SOM FAN"}
-#    classifier.predict(test_data)
-#
 
     def LOG(msg):
         sys.stdout.write(msg)

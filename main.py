@@ -20,6 +20,7 @@ artists = [
         'Samir & Viktor - ”Groupie”',
         ]
 UNKNOWN_WORDS = []
+WORDS = []
 
 chance_of_winning = {}
 
@@ -57,14 +58,21 @@ class NaiveBayesClassifier():
         probable_artists = {}
         for k in self.pw:
             probable_artists[k] = 0
-            chance_of_winning[k] = 0
 
         for token in self.get_tokens(tweet):
+            WORDS.append(token)
+            word_existed = False
             for artist in probable_artists:
                 if token in self.pw[artist].keys():
-                    probable_artists[artist] += math.log2(self.pw[artist][token])
-                else:
-                    UNKNOWN_WORDS.append(token)
+                    word_existed = True
+                    if probable_artists[artist] == 0:
+                        probable_artists[artist] = (self.pw[artist][token])
+                    else:
+                        probable_artists[artist] *= (self.pw[artist][token])
+            if not word_existed:
+                UNKNOWN_WORDS.append(token)
+
+
 
         winner = None
         for probable_artist, p in probable_artists.items():
@@ -72,7 +80,8 @@ class NaiveBayesClassifier():
                 winner = probable_artist
             elif p > probable_artists[winner]:
                 winner = probable_artist
-        chance_of_winning[winner] += probable_artists[winner]
+
+        chance_of_winning[winner] += 1
 
 
 
@@ -82,6 +91,7 @@ class NaiveBayesClassifier():
         positive_tweets = negative_tweets = 0
         for tweet in tweets:
             tokens = self.get_tokens(tweet)
+        #    artist = artists[int(tweet["artist"])-1]
             if tweet["positive"]:
                 artist = artists[int(tweet["artist"])-1]
             else:
@@ -136,11 +146,17 @@ if __name__ == "__main__":
             LOG("Loading test data from %s ..." % sys.argv[3])
             test_data = json.load(fp)
             LOG(" done\n")
+        for k in classifier.pw:
+            chance_of_winning[k] = 0
         for tweet in test_data:
             classifier.predict(tweet)
         for artist, points in classifier.placements().items():
-            print( "{0:.3f} {1}".format(abs(points), artist))
+            print( "{0:.1f}% {1}".format(abs(points/classifier.nr_of_tweets)*100, artist))
         print("\n" +str(classifier.nr_of_tweets) + " tweets was predicted")
         print(str(len(set(UNKNOWN_WORDS))) + " ord skippades")
-        #for word in set(UNKNOWN_WORDS):
-        #    print(word, end=" ")
+        print(str(len(set(WORDS))) + " ord totalt")
+        print(str((len(set(UNKNOWN_WORDS))/len(set(WORDS)))*100) + "% skippades" )
+
+        #pprint.pprint(classifier.pw)
+        for word in set(UNKNOWN_WORDS):
+            print(word, end=" ")

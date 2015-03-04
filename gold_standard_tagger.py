@@ -1,9 +1,13 @@
 import os
 import json
+from tweetartisttagger import TweetArtistTagger
+
 class GoldStandardTagger:
 
   def __init__(self):
+    self.artist_tagger = TweetArtistTagger()
     self.artists = [
+        'None',
         'Andreas Weise – ”Bring Out the Fire”',
         'Linus Svenning – ”Forever Starts Today”',
         'Hasse Andersson – ”Guld och gröna skogar”',
@@ -20,7 +24,7 @@ class GoldStandardTagger:
     save_gold_tweets = [] 
     for tweet in tweets:
       self.clear_screen()
-      print("Current Goldcount: " + str(len(save_gold_tweets)))
+      print("GoldCount: " + str(len(save_gold_tweets)))
       tweet = self.print_screen(tweet) 
       if tweet == "QUIT":
         break
@@ -47,17 +51,25 @@ class GoldStandardTagger:
     print("@" + tweet['user'])
     print(tweet['message'])
     
-    artist = input("Artist: ")
-    if artist == "q":
-      return "QUIT"
-    if artist != "0":
-      positive = input("Positive? (y(1)/n(2):")
-      positive = True if positive == 1 else False
-      tweet["artist"] = artist
-      tweet["positive"] = positive
-      return tweet
-    else:
+    tweet = self.artist_tagger.tag(tweet)
+    if int(tweet["artist"] == 0):
       return None
+    print("Predicted Artist: " + str(self.artists[int(tweet["artist"])]))
+
+    positive = input("Positive? (y(1)/n(2)/ignore(3)/change_artist(4):")
+    
+    if positive == "4":
+      artist = input("Artist:")
+      tweet["artist"] = artist
+      print("Predicted Artist: " + str(self.artists[int(tweet["artist"])]))
+      positive = input("Positive? (y(1)/n(2)/ignore(3)/change_artist(4):")
+    if positive == "q":
+      return "QUIT"
+    if positive == "3":
+      return None
+    positive = True if positive == 1 else False
+    tweet["positive"] = positive
+    return tweet
     
 
   def clear_screen(self):

@@ -10,7 +10,36 @@ import operator
 STOP_WORDS = "vara vad kan sina här ha mot vid kunde något från ut när efter upp vi där min skulle då sin nu har mig du så till är men ett om hade på den med var sig en och det att var att jag i och eller som man melodifestivalen mello melfest".split()
 BAD_CHARS = r"[,.?!-/;:']|(@.+ )"
 
+
+artist_regexes = {
+    #'Andreas Weise – ”Bring Out the Fire”',
+    1: r"( arne)|(w(e|a)(i|j)se)|(bring out the fi+re)",
+
+    #'Linus Svenning – ”Forever Starts Today”',
+    2: r"(linus)|(sven+ing)|(forever starts today)",
+
+    #'Hasse Andersson – ”Guld och gröna skogar”',
+    3: r"(has+e)|(anders+on)|(g(u|o)ld (och|\&) gr(ö|o)na skogar)",
+
+    #'Kristin Amparo – ”I See You”',
+    4: r"((k|c)ristin)|(amparo)|(i se+ (you|u))",
+
+    #'Dolly Style – ”Hello Hi”',
+    5: r"(dol+y)|(hel+o hi)",
+
+    #'Dinah Nah – ”Make Me (La La La)”',
+    6: r"(dinah)|(nah)|(make me)|(la la)|(lala)",
+
+    #'Behrang Miri feat. Victor Crone – ”Det rår vi inte för”',
+    7: r"(behrang)|(miri)|(cro+ne)|(det? rår vi inte för)",
+
+    #'Samir & Viktor - ”Groupie”',
+    8: r"(sami+r)|(badra+n)|( samme )|(viktor)|((\#)?groupie?)",
+}
+
+
 artists = [
+        'No Artist Found',
         'Andreas Weise – ”Bring Out the Fire”',
         'Linus Svenning – ”Forever Starts Today”',
         'Hasse Andersson – ”Guld och gröna skogar”',
@@ -37,7 +66,7 @@ class NaiveBayesClassifier():
         num_correct = 0
         for tweet in tweets:
             num_documents += 1
-            if artists[int(tweet["artist"])-1] == self.predict(tweet) and tweet["positive"] == self.predict_positive(tweet):
+            if int(tweet["artist"]) == self.predict(tweet)["artist"] and tweet["positive"] == self.predict_positive(tweet):
                 num_correct += 1
 
         return num_correct/num_documents
@@ -48,7 +77,7 @@ class NaiveBayesClassifier():
         num_correct = 0
         for tweet in tweets:
             num_documents += 1
-            if artists[int(tweet["artist"])-1] == self.predict(tweet):
+            if int(tweet["artist"]) == self.predict(tweet)["artist"]:
                 num_correct += 1
         return num_correct/num_documents
 
@@ -67,10 +96,10 @@ class NaiveBayesClassifier():
         truepositives = 0
         falsepositives = 0
         for tweet in tweets:
-            predicted = self.predict(tweet)
-            if (artists[int(tweet["artist"])-1] == c) and (predicted == c):
+            predicted = self.predict(tweet)["artist"]
+            if (int(tweet["artist"]) == c) and (predicted == c):
                 truepositives += 1
-            elif (artists[int(tweet["artist"])-1] != c) and (predicted == c):
+            elif (int(tweet["artist"]) != c) and (predicted == c):
                 falsepositives += 1
 
         return truepositives/(truepositives + falsepositives)
@@ -95,10 +124,10 @@ class NaiveBayesClassifier():
         truepositives = 0
         falsenegatives = 0
         for tweet in tweets:
-            predicted = self.predict(tweet)
-            if (artists[int(tweet["artist"])-1] == c) and (predicted == c):
+            predicted = self.predict(tweet)["artist"]
+            if (int(tweet["artist"]) == c) and (predicted == c):
                 truepositives += 1
-            elif (artists[int(tweet["artist"])-1] == c) and (predicted != c):
+            elif (int(tweet["artist"]) == c) and (predicted != c):
                 falsenegatives += 1
         return truepositives/(truepositives + falsenegatives)
                 
@@ -156,40 +185,20 @@ class NaiveBayesClassifier():
         
     def predict(self, tweet):
         """Predicts the artist of the specified tweet."""
-        self.nr_of_tweets += 1
-        probable_artists = {}
-        for k in self.pw:
-            #probable_artists[k] = 0
-            probable_artists[k] = self.pc[k]
+        foundArtists = []
+        lowercaseTweet = tweet["message"].lower()
+        for artist, regex in artist_regexes.items():
+            reg = re.compile(regex, re.IGNORECASE)
+            r = reg.search(lowercaseTweet)
+            if r:
+                foundArtists.append(artist)
 
-        for token in self.get_tokens(tweet):
-            WORDS.append(token)
-            word_existed = False
-            for artist in probable_artists:
-                if token in self.pw[artist].keys():
-                    word_existed = True
-                    if probable_artists[artist] == 0:
-                        probable_artists[artist] = (self.pw[artist][token])
-                    else:
-                        probable_artists[artist] += (self.pw[artist][token])
-            if not word_existed:
-                UNKNOWN_WORDS.append(token)
+        if len(foundArtists) == 1:
+            tweet["artist"] = foundArtists[0]
+        else:
+            tweet["artist"] = 0
 
-
-
-        winner = None
-        for probable_artist, p in probable_artists.items():
-            if winner == None:
-                winner = probable_artist
-            elif p > probable_artists[winner]:
-                winner = probable_artist
-        
-        #print(winner)
-
-        chance_of_winning[winner] += 1
-        return winner
-        
-
+        return tweet        
 
     def train_opinion(self, tweets):
         """Trains the parser on positive and negative tweets using specified training data"""
@@ -342,7 +351,7 @@ if __name__ == "__main__":
         LOG("Training ...")
         #remove comment to train opinion
         classifier.train_opinion_new(training_data)
-        classifier.train(training_data)
+        #classifier.train(training_data)
         LOG(" done\n")
         LOG("Saving model to %s ..." % sys.argv[3])
         classifier.save(sys.argv[3])
@@ -365,39 +374,45 @@ if __name__ == "__main__":
         numtrue = 0
         numfalse = 0
         artist_pos_count = {}
+        predicted_tweets =[]
 
         for tweet in test_data:
+            predicted_tweets.append(classifier.predict(tweet))
             #print(tweet)
             #remove comment to remove negative tweets
             if classifier.predict_positive(tweet):
-                predicted_artist = classifier.predict(tweet)
+                predicted_artist = artists[classifier.predict(tweet)["artist"]]
                 classifier.ensure_key(artist_pos_count, predicted_artist, 0)
                 artist_pos_count[predicted_artist] += 1
                 numtrue += 1
+                if predicted_artist == artists[8]:
+                    print(tweet["message"])
+                    print()
             else:
                 numfalse += 1
         
         print(numtrue)
         print(numfalse)
         print(sorted(artist_pos_count.items(),key=operator.itemgetter(1)))
-        for artist, points in classifier.placements().items():
-            print( "{0:.1f}% {1}".format(abs(points/classifier.nr_of_tweets)*100, artist))
-        print("\n" +str(classifier.nr_of_tweets) + " tweets was predicted")
-        print(str(len(set(UNKNOWN_WORDS))) + " ord skippades")
-        print(str(len(set(WORDS))) + " ord totalt")
-        print(str((len(set(UNKNOWN_WORDS))/len(set(WORDS)))*100) + "% skippades" )
+        #for artist, points in classifier.placements().items():
+        #    print( "{0:.1f}% {1}".format(abs(points/classifier.nr_of_tweets)*100, artist))
+        #print("\n" +str(classifier.nr_of_tweets) + " tweets was predicted")
+        #print(str(len(set(UNKNOWN_WORDS))) + " ord skippades")
+        #print(str(len(set(WORDS))) + " ord totalt")
+        #print(str((len(set(UNKNOWN_WORDS))/len(set(WORDS)))*100) + "% skippades" )
 
         #Utskrifter för accuracy, precision & recall:
-        print("Accuracy: " + str(classifier.accuracy(test_data)))
-        print("Accuracy för artister: " + str(classifier.accuracy_artist(test_data)))
-        print("Accuracy för åsikt: " + str(classifier.accuracy_opinion(test_data)))
-        for x in range(0,8):
-            print(str(artists[x]) + " - Precision: " + str(classifier.precision_artist(artists[x],test_data)) 
-                + ", Recall: " + str(classifier.recall_artist(artists[x],test_data)))
-        print("Precision för positiva taggar: " + str(classifier.precision_opinion(True,test_data)))
-        print("Precision för negativa taggar: " + str(classifier.precision_opinion(False,test_data)))
-        print("Recall för positiva taggar: " + str(classifier.recall_opinion(True,test_data)))
-        print("Recall för negativa taggar: " + str(classifier.recall_opinion(False,test_data)))
+        
+        #print("Accuracy: " + str(classifier.accuracy(test_data)))
+        #print("Accuracy för artister: " + str(classifier.accuracy_artist(test_data)))
+        #print("Accuracy för åsikt: " + str(classifier.accuracy_opinion(test_data)))
+        #for x in range(0,8):
+        #    print(str(artists[x]) + " - Precision: " + str(classifier.precision_artist(x,test_data)) 
+        #        + ", Recall: " + str(classifier.recall_artist(x,test_data)))
+        #print("Precision för positiva taggar: " + str(classifier.precision_opinion(True,test_data)))
+        #print("Precision för negativa taggar: " + str(classifier.precision_opinion(False,test_data)))
+        #print("Recall för positiva taggar: " + str(classifier.recall_opinion(True,test_data)))
+        #print("Recall för negativa taggar: " + str(classifier.recall_opinion(False,test_data)))
         #pprint.pprint(classifier.pw)
         #for word in set(UNKNOWN_WORDS):
         #    print(word, end=" ")

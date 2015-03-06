@@ -151,8 +151,6 @@ class NaiveBayesClassifier():
             if word in self.pp["negative"]:
                 negative += self.pp["negative"][word]
 
-        p = positive > negative
-
         return positive >= negative
     
         
@@ -287,6 +285,7 @@ class NaiveBayesClassifier():
     def train(self, tweets):
         """Trains using the specified training data."""
         word_count = {}
+        smoothing_set = set()
         positive_tweets = negative_tweets = 0
         for tweet in tweets:
             tokens = self.get_tokens(tweet)
@@ -300,6 +299,7 @@ class NaiveBayesClassifier():
             self.pc[artist] += 1
             self.ensure_key(self.pw, artist, {})
             for w in tokens:
+                smoothing_set.add(w)
                 self.ensure_key(self.pw[artist], w, 0)
                 self.pw[artist][w] += 1
                 self.ensure_key(word_count, w, 0)
@@ -307,8 +307,16 @@ class NaiveBayesClassifier():
         # print(str(negative_tweets) + " negativa tweets")
         print("Tränade på " + str(len(tweets)))
 
+        
         for artist in self.pw:
             self.pc[artist] = math.log(self.pc[artist] / len(tweets))
+
+        #add one smoothing
+        for word in smoothing_set:
+            for key in self.pw:
+                self.ensure_key(self.pw[key],word,0)
+                self.pw[key][word] += 1
+        
         
         for artist, words in self.pw.items():
             for word, c in words.items():

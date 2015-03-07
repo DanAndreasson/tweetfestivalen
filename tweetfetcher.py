@@ -22,7 +22,7 @@ class TweetFetcher:
         d = datetime.datetime.strptime(datestr,"%a %b %d %H:%M:%S %z %Y")
         return d.replace(tzinfo=None)
 
-    def search(self,until=None):
+    def search(self,folder,until=None):
         try:
             for key in self.keywords:
                 tso = TwitterSearchOrder()
@@ -67,16 +67,16 @@ class TweetFetcher:
                         print("Search Complete...Sleeping...")
                         print('Current count: ' + str(total_get))
                         rate_counter = 0
-                        self.save(self.tweet_list,key)
+                        self.save(self.tweet_list,key,folder)
                         self.tweet_list = []
                         time.sleep(sleep_for)
         except TwitterSearchException as e:
             print(e)
 
 
-    def save(self,tweets,keyword):
+    def save(self,tweets,keyword,folder):
         print("Saving file...")
-        filepath = "./data/"+ keyword + '-' + time.strftime("%c") + ".json"
+        filepath = "./data/"+ folder + '/' + keyword + '-' + time.strftime("%c") + ".json"
 
         with open(filepath, "w") as json_file:
             json_file.write("{}\n".format(json.dumps(tweets)))

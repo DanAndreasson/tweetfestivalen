@@ -15,7 +15,7 @@ class TweetParser:
         "Make me","la la la","Behrang","Miri","Victor","Crone","Det rår vi inte för",
         "Samir",",Badran","Viktor","Groupie"]
   
-  def delete_duplicates(self,files):
+  def delete_duplicates(self,files,folder):
     """ Parse go though all ids of all tweets and delete duplicates for all
     files"""
     all_tweets = []
@@ -31,10 +31,10 @@ class TweetParser:
             tweet_ids.append(tweet["id"])
     print("Total Tweets: " + str(total_tweets)) 
     print("Unique Tweets: " + str(len(tweet_ids))) 
-    self.save_parsed_file(all_tweets)
+    self.save_parsed_file(all_tweets,folder)
 
-  def save_parsed_file(self,tweets):
-    savefile = './parsed/parsed_tweets_2.json'
+  def save_parsed_file(self,tweets,folder):
+    savefile = './parsed/'+folder+'/parsed_tweets.json'
     with open(savefile,'w') as w_file:
       w_file.write('{}\n'.format(json.dumps(tweets)))
     print("Tweetcount: " + str(len(tweets)))

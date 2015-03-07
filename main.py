@@ -353,8 +353,8 @@ if __name__ == "__main__":
         classifier.train_opinion_new(training_data)
         #classifier.train(training_data)
         LOG(" done\n")
-        LOG("Saving model to %s ..." % sys.argv[3])
-        classifier.save(sys.argv[3])
+        LOG("Saving model to %s ..." % sys.argv[2])
+        classifier.save(sys.argv[2])
         LOG(" done\n")
 
     # Load a trained model from a file and evaluate it on test data.
@@ -385,15 +385,14 @@ if __name__ == "__main__":
                 classifier.ensure_key(artist_pos_count, predicted_artist, 0)
                 artist_pos_count[predicted_artist] += 1
                 numtrue += 1
-                if predicted_artist == artists[8]:
-                    print(tweet["message"])
-                    print()
             else:
                 numfalse += 1
         
-        print(numtrue)
-        print(numfalse)
-        print(sorted(artist_pos_count.items(),key=operator.itemgetter(1)))
+        #print(numtrue)
+        #print(numfalse)
+        #print(sorted(artist_pos_count.items(),key=operator.itemgetter(1)))
+        for a in sorted(artist_pos_count.items(),key=operator.itemgetter(1)):
+            print(a)
         #for artist, points in classifier.placements().items():
         #    print( "{0:.1f}% {1}".format(abs(points/classifier.nr_of_tweets)*100, artist))
         #print("\n" +str(classifier.nr_of_tweets) + " tweets was predicted")
